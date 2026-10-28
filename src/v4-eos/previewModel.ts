@@ -168,6 +168,7 @@ function pick(map: Record<string, string>, labels: string[]): string | undefined
 
 const TITLE_LABELS = [
   "Heading - H1",
+  "Plan Builder Title",
   "Heading",
   "Header",
   "Plan Picker Title",
@@ -194,6 +195,9 @@ const SUBTITLE_LABELS = [
 // Products / Plan Picker Data list. Feature/bundle/option items are excluded.
 function isProductNode(node: StructureNode, parent: StructureNode | null): boolean {
   if (previewRoleFor(node) === "product") return true;
+  // A schema item that carries its own product/plan title is a card, whatever
+  // its collection is called (Plan Cards in the Plan Builder layout).
+  if (hasPlanTitleField(node)) return true;
   const pl = parent?.label.toLowerCase() ?? "";
   if (pl === "products" || pl.includes("plan picker data")) return true;
   const noun = (parent?.itemNoun ?? "").toLowerCase();
@@ -201,6 +205,13 @@ function isProductNode(node: StructureNode, parent: StructureNode | null): boole
     return true;
   }
   return false;
+}
+
+function hasPlanTitleField(node: StructureNode): boolean {
+  if (node.props?.kind !== "fields") return false;
+  return (node.props.data.groups ?? []).some((g) =>
+    g.fields.some((f) => /^(product|plan) title$/i.test(f.label)),
+  );
 }
 
 // Whether a collection node holds a product's feature bullets.

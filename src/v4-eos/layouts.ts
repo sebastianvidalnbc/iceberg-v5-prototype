@@ -14,6 +14,7 @@ import type { IconName } from "./ui-lib/Icon";
 import type { StructureNode, StructureObjectType } from "./data";
 import { createWidgetChild } from "./data";
 import { buildSectionFromSchema } from "./schemaModel";
+import { fillSampleContent } from "./layout-samples";
 
 // Fresh, collision-proof ids for every node in a newly built subtree.
 let seq = 0;
@@ -59,7 +60,10 @@ export interface LayoutDef {
 // seeded so the tree/preview aren't empty). Falls back to a titled content
 // section only if the schema id somehow isn't present.
 export function buildLayoutNode(def: LayoutDef): StructureNode {
-  return buildSectionFromSchema(def.schemaId, def.name, def.name) ?? simple(def.name);
+  const node = buildSectionFromSchema(def.schemaId, def.name, def.name) ?? simple(def.name);
+  // A new section lands filled with sample content (see layout-samples.ts).
+  fillSampleContent(node, def.id, def.name);
+  return node;
 }
 
 // --- Subtree builders -------------------------------------------------------

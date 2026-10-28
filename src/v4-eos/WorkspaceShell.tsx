@@ -48,6 +48,7 @@ import {
 } from "./structureOps";
 import type { StructureNode, StructureObjectType } from "./data";
 import { collectVariationNodes, derivePreviewModel } from "./previewModel";
+import { isNameField } from "./structure-panel";
 import { collectInvalidFields } from "./validate";
 import { LayoutPicker } from "./regions/LayoutPicker";
 import {
@@ -503,20 +504,15 @@ export function WorkspaceShell({
   // onto the element INSTANCE's `content` within the variant's Structure — the
   // V4 analog of updatePlaceholderContentByPath — so the edit persists on the
   // instance and drives both the Properties panel and the live preview.
-  // A category, plan or product's title is also its name: editing it renames
-  // the node, so the tree (and the panel's tabs) show the title the author set.
+  // A title field also names its node (see isNameField): editing it renames the
+  // node, so the tree and the panel's tabs show the title the author set.
   const handleEditField = useCallback(
     (nodeId: string, label: string, value: string) => {
       updateStructure((nodes) => {
         const next = setNodeContent(nodes, nodeId, label, value);
         const node = findNodeById(nodes, nodeId);
-        const isNamed =
-          node?.objectType === "category" ||
-          node?.objectType === "product" ||
-          node?.objectType === "plan";
-        const isTitle = label === "Category Title" || label === "Product Title" || label === "Plan Title";
         const title = value.trim();
-        return isNamed && isTitle && title ? renameNode(next, nodeId, title) : next;
+        return node && isNameField(node, label) && title ? renameNode(next, nodeId, title) : next;
       });
     },
     [updateStructure]

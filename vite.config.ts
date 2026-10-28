@@ -4,13 +4,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 
 export default defineConfig({
-  base: "/iceberg-v4-widgets-prototype/",
+  base: "/iceberg-v5-prototype/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: { "@": resolve(__dirname, "./src") },
   },
   server: {
-    open: "/iceberg-v4-widgets-prototype/",
+    open: "/iceberg-v5-prototype/",
   },
   build: {
     outDir: "dist",

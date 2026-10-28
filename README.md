@@ -4,7 +4,7 @@ Standalone UX prototype of the Iceberg CMS authoring interface rebuilt on the
 Eos design system. It uses illustrative data only; there is no backend,
 authentication, or persistence beyond browser state.
 
-Live: https://sebastianvidalnbc.github.io/iceberg-v4-widgets-prototype/
+Live: https://sebastianvidalnbc.github.io/iceberg-v5-prototype/
 
 ## Local development
 
@@ -16,7 +16,7 @@ npm run dev
 ```
 
 Vite serves the app at
-`http://localhost:5173/iceberg-v4-widgets-prototype/`.
+`http://localhost:5173/iceberg-v5-prototype/`.
 
 ```bash
 npm run typecheck

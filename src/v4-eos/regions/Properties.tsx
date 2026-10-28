@@ -63,7 +63,7 @@ import {
 import { allowedChildType, maxChildrenFor } from "../elements";
 import { findNodeById } from "../structureOps";
 import { classifyWidget, WIDGET_FAMILY_HUE } from "../browse";
-import { hostsPanelLists, panelItemTitle, panelListsOf, panelOnlyIds } from "../structure-panel";
+import { analyzePanel, panelItemTitle, panelListsOf } from "../structure-panel";
 
 // Widget-only wayfinding: the Offers / Segmentation collections list their
 // children by Offer Type, so each row gets the same family dot the Widgets list
@@ -782,13 +782,13 @@ function InlinePanelLists({
   onEditField,
   onAddChild,
   onRemoveChild,
-  panelIds,
+  tabbedIds,
   renderTabbed,
 }: {
   lists: StructureNode[];
-  // Panel-only ids, and the renderer for a list whose items are tabs (the
-  // products under a category), so its items can hold their own lists.
-  panelIds: ReadonlySet<string>;
+  // Tabbed lists (see structure-panel.ts) render through renderTabbed, so their
+  // items can hold their own lists.
+  tabbedIds: ReadonlySet<string>;
   renderTabbed: (listId: string) => ReactNode;
   resolve: (id: string) => ObjectProperties | null;
   overridesFor: (id: string) => Record<string, string>;
@@ -805,7 +805,7 @@ function InlinePanelLists({
   return (
     <>
       {lists.map((list) => {
-        if (hostsPanelLists(list, panelIds))
+        if (tabbedIds.has(list.id))
           return <Fragment key={list.id}>{renderTabbed(list.id)}</Fragment>;
         const items = list.children ?? [];
         const feature = isFeatureListNode(list);
@@ -991,7 +991,8 @@ function PropertiesBody({
       ? resolveWidgetPropertiesForVariant(variant, id)
       : resolvePropertiesForVariant(variant, id);
   // Panel-only lists (structure-panel.ts) are edited here, not in the tree.
-  const panelIds = useMemo(() => panelOnlyIds(variant.structure), [variant.structure]);
+  const panel = useMemo(() => analyzePanel(variant.structure), [variant.structure]);
+  const panelIds = panel.hidden;
   const node = findNodeById(variant.structure, nodeId);
   const resolved = resolveNode(nodeId);
   // A product's tab and header show its Product Title (see panelItemTitle).
@@ -1011,8 +1012,8 @@ function PropertiesBody({
   if (resolved.kind === "collection") {
     // Items that carry panel-only lists (the three products, each with its
     // features) become one tab each, so the author never walks the tree.
-    // Panel-only lists (a category's products) are tabbed, one per item.
-    const tabbed = !!node && panelIds.has(node.id);
+    // Tabbed lists (a category's products, a plan picker's plans) get one tab per item.
+    const tabbed = !!node && panel.tabbed.has(node.id);
     return (
       <CollectionBody
         data={titled(resolved.data)}
@@ -1061,7 +1062,7 @@ function PropertiesBody({
       footer={({ isOpen, toggle }) => (
         <InlinePanelLists
           lists={lists}
-          panelIds={panelIds}
+          tabbedIds={panel.tabbed}
           renderTabbed={(listId) => {
             const list = findNodeById(variant.structure, listId);
             return (
