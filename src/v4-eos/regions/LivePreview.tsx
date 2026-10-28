@@ -290,6 +290,10 @@ export function LivePreview({
   onMvtChange,
 }: LivePreviewProps) {
   const isWidget = context === "widget";
+  // A layout widget is a page section, so it renders through the same Peacock
+  // preview as a page. Data widgets (Retention, offers) keep the JSON preview.
+  const rendersAsPage =
+    isWidget && (variant?.structure ?? []).some((n) => n.objectType === "page-section");
   const [audience, setAudience] = useState("default");
   const [size, setSize] = useState("full");
   // Widget context: the module chosen to render this widget's JSON through.
@@ -437,7 +441,7 @@ export function LivePreview({
   // Widget context: data widgets (Retention Service) have no page render. Show
   // the real "Preview JSON in Module" picker — pick a module to render the
   // widget's live JSON through; otherwise an honest empty state.
-  if (isWidget) {
+  if (isWidget && !rendersAsPage) {
     const moduleLabel =
       PREVIEW_MODULE_OPTIONS.find((o) => o.value === previewModule)?.label ?? "";
     const envLabel =

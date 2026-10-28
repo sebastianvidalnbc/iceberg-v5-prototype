@@ -11,7 +11,8 @@ import type { WidgetChildRow } from "../browse";
 import { SortHeaderCell, compareSortValues, nextSort, type SortState } from "../ui-lib/SortableHeader";
 import { LayoutPicker } from "../regions/LayoutPicker";
 import { createWidgetFromLayout } from "../widget-create";
-import { LAYOUT_TYPES, type LayoutTypeId } from "../layout-identity";
+import { LAYOUT_TYPES, layoutTypeOf, type LayoutTypeId } from "../layout-identity";
+import { layoutDefForWidget } from "../layout-widgets";
 
 type SortKey = "slug" | "widgetName" | "createdAt" | "modifiedAt";
 
@@ -204,7 +205,10 @@ function WidgetRowItem({
   // Same rule as Pages: only rows with subpages get a chevron; the others keep
   // the empty slot so slugs, format pills and status pills stay in one column.
   const hasSubpages = row.children.length > 0;
-  const layoutType = WIDGET_LAYOUT_TYPE[row.type];
+  // A layout widget takes its layout's own type; anything else falls back to
+  // its slug family.
+  const layoutDef = row.layoutId ? layoutDefForWidget(row.slug) : undefined;
+  const layoutType = layoutDef ? layoutTypeOf(layoutDef) : WIDGET_LAYOUT_TYPE[row.type];
   const layoutName = LAYOUT_TYPES[layoutType].name;
   return (
     <Fragment>

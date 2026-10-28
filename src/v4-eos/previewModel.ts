@@ -148,7 +148,14 @@ function fieldsForNode(
   const authored = OBJECT_PROPERTIES[node.id]
     ? flattenFields({ kind: "fields", data: OBJECT_PROPERTIES[node.id] })
     : {};
-  return { ...base, ...authored, ...(node.content ?? {}) };
+  const merged: Record<string, string> = { ...base, ...authored, ...(node.content ?? {}) };
+  // A qualified label ("Subtitle (optional)") also answers to its base name, so the
+  // title and subtitle pickers find it. Existing keys are never overwritten.
+  for (const key of Object.keys(merged)) {
+    const bare = key.replace(/\s*\(.*\)\s*$/, "").trim();
+    if (bare !== key && !(bare in merged)) merged[bare] = merged[key];
+  }
+  return merged;
 }
 
 function pick(map: Record<string, string>, labels: string[]): string | undefined {
@@ -168,6 +175,11 @@ const TITLE_LABELS = [
   "Category Label",
   "Error Title",
   "Title",
+  // Sections that title themselves with a Headline, FAQ Heading or Header Title
+  // field. They sit last so any section with a real title field keeps using that.
+  "Headline",
+  "Faq Heading",
+  "Header Title",
 ];
 const SUBTITLE_LABELS = [
   "Description",

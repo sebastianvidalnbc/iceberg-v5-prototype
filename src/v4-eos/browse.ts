@@ -373,6 +373,8 @@ export interface WidgetRow {
   children: WidgetChildRow[];
   /** Number of production variants; a widget with variants opens its Variants list. */
   variantCount: number;
+  /** Layout widgets only: the catalog layout the widget is built from. */
+  layoutId: string | null;
 }
 
 
@@ -400,6 +402,7 @@ export function buildWidgetRows(): WidgetRow[] {
         status: c.status,
       })),
       variantCount: widgetVariantsFor(w.slug).length,
+      layoutId: w.layoutId ?? null,
     };
   });
 }

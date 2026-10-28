@@ -11,6 +11,8 @@ export interface ProductionWidget {
   modified: string;
   createdAt: number;
   modifiedAt: number;
+  /** Set on layout widgets (see layout-widgets.ts): the catalog layout it is built from. */
+  layoutId?: string;
 }
 
 export const PRODUCTION_WIDGETS: ProductionWidget[] = [
