@@ -166,6 +166,15 @@ function pick(map: Record<string, string>, labels: string[]): string | undefined
   return undefined;
 }
 
+// The CTA copy. "Primary CTA" is a choice (None / Primary / Secondary) on product
+// and content schemas, and copy on some layouts, so it only counts as copy when
+// it is not a choice. "None" means no button, even if copy is left behind.
+function ctaCopy(map: Record<string, string>): string | undefined {
+  if (map["Primary CTA"]?.trim().toLowerCase() === "none") return undefined;
+  const copy = pick(map, ["Primary CTA Text", "CTA Text"]) ?? pick(map, ["Primary CTA", "CTA"]);
+  return copy && !/^(primary|secondary)$/i.test(copy.trim()) ? copy : undefined;
+}
+
 const TITLE_LABELS = [
   "Heading - H1",
   "Plan Builder Title",
@@ -282,9 +291,7 @@ function buildCard(
   // real card renders a button only when a CTA is authored — "None"/empty means
   // no button (not a button labelled "None"). Card-level fields win; a
   // cadence-authored CTA (text/href) is honoured when the card leaves it blank.
-  const ctaText =
-    pick(map, ["Primary CTA", "Primary CTA Text", "CTA", "CTA Text"]) ??
-    pick(cm, ["Primary CTA", "Primary CTA Text"]);
+  const ctaText = ctaCopy(map) ?? ctaCopy(cm);
   const cta =
     ctaText && ctaText.toLowerCase() !== "none" ? ctaText : undefined;
   const ctaHref = cta
@@ -678,9 +685,7 @@ function buildSection(
   // Section-level primary CTA (hero / banner). Authored via the section's own
   // CTA fields; "None"/empty means no explicit CTA (the renderer keeps a default
   // label for hero/banner so the band never looks empty).
-  const ctaRaw = pick(map, [
-    "Primary CTA", "Primary CTA Text", "CTA", "CTA Text", "Link Title", "Button Text",
-  ]);
+  const ctaRaw = ctaCopy(map) ?? pick(map, ["Link Title", "Button Text"]);
   const cta = ctaRaw && ctaRaw.toLowerCase() !== "none" ? ctaRaw : undefined;
   const ctaHref = cta
     ? pick(map, ["Primary CTA HREF", "CTA HREF", "Link URL", "Button URL"])

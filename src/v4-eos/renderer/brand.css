@@ -294,6 +294,7 @@ body {
 /* --- block (full-width, e.g. product-card CTA) -------------------------- */
 .pk-btn--block {
   display: flex;
+  box-sizing: border-box; /* width:100% includes the side padding: stay inside the card */
   width: 100%;
 }
 .pk-btn__icon {

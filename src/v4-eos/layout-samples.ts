@@ -6,12 +6,12 @@
 import type { PropertyField, StructureNode } from "./data";
 import { isNameField } from "./structure-panel";
 
-const PLAN_NAMES = ["Premium", "Premium Plus", "Premium Plus Ad-Free"];
-const PLAN_PRICES = ["$5.99", "$12.99", "$12.99"];
-const STRIKE_PRICES = ["$9.99", "$14.99", "$14.99"];
+export const PLAN_NAMES = ["Premium", "Premium Plus", "Premium Plus Ad-Free"];
+export const PLAN_PRICES = ["$5.99", "$12.99", "$12.99"];
+export const STRIKE_PRICES = ["$9.99", "$14.99", "$14.99"];
 const BADGES = ["Most popular", "Best value", "Best value"];
 const CADENCES = ["Monthly", "Annual"];
-const FEATURES = [
+export const FEATURES = [
   "Access to thousands of hours of content",
   "Stream on multiple devices",
   "Download content for offline viewing",
@@ -19,7 +19,7 @@ const FEATURES = [
   "Everything in Premium",
   "Exclusive Peacock Originals",
 ];
-const PLAN_DESCRIPTIONS = [
+export const PLAN_DESCRIPTIONS = [
   "Stream thousands of shows and movies with limited ads.",
   "Everything in Premium, plus ad-free streaming and exclusive Originals.",
   "Everything in Premium Plus, with no ads at all.",
@@ -43,7 +43,7 @@ const FAQ_ANSWERS = [
   "Stream on your phone, tablet, computer and TV, on multiple devices at once.",
 ];
 const GENERIC_DESCRIPTION = "Stream the latest shows, movies and live sports, all in one place.";
-const LEGAL =
+export const LEGAL =
   "Offer subject to terms and conditions. Plans renew automatically until cancelled. Terms apply.";
 const VOUCHER_ERROR = "This code can't be applied. Check the code and try again.";
 const PLAN_HEADING = "Pick a Plan. Cancel Anytime.";

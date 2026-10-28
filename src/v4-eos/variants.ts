@@ -9,6 +9,7 @@ import type {
   StructureObjectType,
   VariantWorkspace,
 } from "./data";
+import { FEATURES } from "./layout-samples";
 
 // Small helper to cut down on repetition when authoring sample trees.
 const n = (
@@ -56,6 +57,13 @@ const section = (node: StructureNode, role: SectionRole): StructureNode => ({
   role,
 });
 
+// A product's feature bullets as a panel-only list (hidden from the tree, shown
+// in the Properties panel), filled with the same bullets the Layout Picker uses.
+const featureList = (prefix: string, texts: string[]): StructureNode =>
+  nt(`${prefix}-features`, "Product Features", "product-features-list", {
+    children: texts.map((text, i) => nt(`${prefix}-feat-${i + 1}`, text, "feature")),
+  });
+
 // --- Spanish voucher error message ------------------------------------------
 const spanishStructure: StructureNode[] = [
   section(n("sv-title", "Title"), "Page Title"),
@@ -70,7 +78,15 @@ const disclaimerStructure: StructureNode[] = [
     n("td-section-content", "Section Content", [
       n("td-control", "Control", [
         n("td-variant-categories", "Variant Categories", [
-          n("td-plans", "Plans", []),
+          n("td-plans", "Plans", [
+            nt("td-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
+              children: [
+                nt("td-premium", "Premium", "product", {
+                  children: [featureList("td-premium", FEATURES.slice(0, 3))],
+                }),
+              ],
+            }),
+          ]),
         ]),
       ]),
     ]),
@@ -88,10 +104,16 @@ const annualStructure: StructureNode[] = [
       n("as-control", "Control", [
         n("as-variant-categories", "Variant Categories", [
           n("as-plans", "Plans", [
-            n("as-plan-picker-data", "Plan Picker Data", [
-              n("as-premium", "Premium", []),
-              n("as-premium-plus", "Premium Plus", []),
-            ]),
+            nt("as-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
+              children: [
+                nt("as-premium", "Premium", "product", {
+                  children: [featureList("as-premium", FEATURES.slice(0, 3))],
+                }),
+                nt("as-premium-plus", "Premium Plus", "product", {
+                  children: [featureList("as-premium-plus", FEATURES.slice(3))],
+                }),
+              ],
+            }),
           ]),
         ]),
       ]),
@@ -141,13 +163,7 @@ const premiumCardStructure: StructureNode[] = [
                         children: [
                           nt("pc-select", "Select", "product", {
                             expanded: false,
-                            children: [
-                              nt(
-                                "pc-select-features",
-                                "Product Features",
-                                "product-features-list",
-                              ),
-                            ],
+                            children: [featureList("pc-select", FEATURES.slice(0, 3))],
                           }),
                           nt("pc-premium", "Premium", "product", {
                             children: [
@@ -168,13 +184,7 @@ const premiumCardStructure: StructureNode[] = [
                           }),
                           nt("pc-premium-plus", "Premium Plus", "product", {
                             expanded: false,
-                            children: [
-                              nt(
-                                "pc-pplus-features",
-                                "Product Features",
-                                "product-features-list",
-                              ),
-                            ],
+                            children: [featureList("pc-pplus", FEATURES.slice(3))],
                           }),
                         ],
                       }),
@@ -220,10 +230,16 @@ const premiumTest2Structure: StructureNode[] = [
       n("pt-control", "Control", [
         n("pt-variant-categories", "Variant Categories", [
           n("pt-plans", "Plans", [
-            n("pt-plan-picker-data", "Plan Picker Data", [
-              n("pt-premium", "Premium", []),
-              n("pt-premium-plus", "Premium Plus", []),
-            ]),
+            nt("pt-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
+              children: [
+                nt("pt-premium", "Premium", "product", {
+                  children: [featureList("pt-premium", FEATURES.slice(0, 3))],
+                }),
+                nt("pt-premium-plus", "Premium Plus", "product", {
+                  children: [featureList("pt-premium-plus", FEATURES.slice(3))],
+                }),
+              ],
+            }),
           ]),
         ]),
       ]),

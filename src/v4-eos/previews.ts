@@ -7,6 +7,7 @@ import type {
   ResolvedProperties,
   SectionDesign,
 } from "./data";
+import { LEGAL, PLAN_DESCRIPTIONS } from "./layout-samples";
 
 // --- Preview data (center canvas) -------------------------------------------
 export const VARIANT_PREVIEWS: Record<string, PreviewData> = {
@@ -480,6 +481,19 @@ export function behavioursState(sectionName: string): ResolvedProperties {
 // --- Property schemas per Structure object ----------------------------------
 // Keyed by structure node id. Only objects with authored fields appear here;
 // everything else falls back to a name-only panel (see data.ts).
+// A plan card with a working CTA, a standard legal line and the sample copy from
+// the Layout Picker. Used by the sample Variants so their plans read as filled.
+function pricedPlan(label: string, values: Partial<ProductValues>): ObjectProperties {
+  return productSchema(label, {
+    primaryCta: "Primary",
+    primaryCtaText: "Get started",
+    primaryCtaHref: "/checkout",
+    legal: "Standard",
+    legalDescription: LEGAL,
+    ...values,
+  });
+}
+
 export const OBJECT_PROPERTIES: Record<string, ObjectProperties> = {
   // 0609 premium card test 2 → Premium. Uses the SAME productSchema as every
   // other Product; only the VALUES are authored here (badge, description, …).
@@ -490,9 +504,62 @@ export const OBJECT_PROPERTIES: Record<string, ObjectProperties> = {
     productTitle: "Premium",
     productDescription:
       "Stream hit movies, bingeworthy shows, and live sports — plus new series the day after they air.",
+    offerPrice: "$12.99",
+    priceCadenceSubtext: "/month",
+    primaryCta: "Primary",
+    primaryCtaText: "Get started",
+    primaryCtaHref: "/checkout",
     legal: "Custom",
     legalDescription:
       "Compatible device and internet connection required. Auto-renews monthly at the then-current price until canceled. Live sports subject to regional and blackout restrictions. Terms apply.",
+  }),
+  // 0609 → Select and Premium Plus: same card schema, filled from the sample plans.
+  "pc-select": pricedPlan("Select", {
+    productDescription: PLAN_DESCRIPTIONS[0],
+    offerPrice: "$5.99",
+    priceCadenceSubtext: "/month",
+  }),
+  "pc-premium-plus": pricedPlan("Premium Plus", {
+    productDescription: PLAN_DESCRIPTIONS[1],
+    offerPrice: "$19.99",
+    priceCadenceSubtext: "/month",
+  }),
+  // Annual Select Update → Premium and Premium Plus, priced annually with a saving.
+  "as-premium": pricedPlan("Premium", {
+    badge: true,
+    badgeText: "Best Value",
+    productDescription: PLAN_DESCRIPTIONS[0],
+    offerDetail: "Save 17%",
+    strikeThroughPrice: "$155.88",
+    offerPrice: "$129.99",
+    priceCadenceSubtext: "/year",
+  }),
+  "as-premium-plus": pricedPlan("Premium Plus", {
+    productDescription: PLAN_DESCRIPTIONS[1],
+    offerDetail: "Save 17%",
+    strikeThroughPrice: "$239.88",
+    offerPrice: "$199.99",
+    priceCadenceSubtext: "/year",
+  }),
+  // Premium_Test__2 → Premium and Premium Plus, priced monthly.
+  "pt-premium": pricedPlan("Premium", {
+    productDescription: PLAN_DESCRIPTIONS[0],
+    offerPrice: "$12.99",
+    priceCadenceSubtext: "/month",
+  }),
+  "pt-premium-plus": pricedPlan("Premium Plus", {
+    productDescription: PLAN_DESCRIPTIONS[1],
+    offerPrice: "$19.99",
+    priceCadenceSubtext: "/month",
+  }),
+  // Testing disclaimer 2 → single Premium card. The disclaimer below carries the
+  // legal copy, so the card has no legal line of its own.
+  "td-premium": pricedPlan("Premium", {
+    productDescription: PLAN_DESCRIPTIONS[0],
+    offerPrice: "$12.99",
+    priceCadenceSubtext: "/month",
+    legal: "None",
+    legalDescription: "",
   }),
   // Spanish voucher error message → Voucher Error
   "sv-voucher-error": {
