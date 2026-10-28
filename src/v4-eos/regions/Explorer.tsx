@@ -1,6 +1,7 @@
 import { Button } from "@/v4-eos/ui/button";
 import {
   useEffect,
+  useMemo,
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
@@ -23,6 +24,7 @@ import {
   WIDGET_OFFER_FILTER_INDEX,
 } from "../data";
 import { classifyWidget, type WidgetType } from "../browse";
+import { panelOnlyIds } from "../structure-panel";
 import {
   LAYOUT_TYPES,
   layoutTypeForNode,
@@ -197,6 +199,7 @@ function StructureLevel({
   parentId,
   depth,
   dragDisabled,
+  panelIds,
   selectedId,
   expanded,
   renamingId,
@@ -220,6 +223,8 @@ function StructureLevel({
   parentId: string | null;
   depth: number;
   dragDisabled?: boolean;
+  // Panel-only lists (see structure-panel.ts): hidden here, shown in Properties.
+  panelIds: ReadonlySet<string>;
   selectedId: string | null;
   expanded: Set<string>;
   renamingId: string | null;
@@ -279,9 +284,10 @@ function StructureLevel({
   return (
     <>
       {nodes.map((node, index) => {
+        if (panelIds.has(node.id)) return null;
         const isOffers = node.id === WIDGET_OFFERS_NODE_ID;
         const isOfferGroup = node.objectType === "offer-group";
-        const hasChildren = !!node.children && node.children.length > 0;
+        const hasChildren = (node.children ?? []).some((c) => !panelIds.has(c.id));
         // While searching Offers, force the type groups open so matches show.
         const isOpen =
           expanded.has(node.id) || (!!q && isOfferGroup);
@@ -412,6 +418,7 @@ function StructureLevel({
                   parentId={node.id}
                   depth={depth + 1}
                   dragDisabled={childDragDisabled}
+                  panelIds={panelIds}
                   selectedId={selectedId}
                   expanded={expanded}
                   renamingId={renamingId}
@@ -526,6 +533,7 @@ function StructureTree({
   noTrailingFade?: boolean;
 }) {
   const [offerQuery, setOfferQuery] = useState("");
+  const panelIds = useMemo(() => panelOnlyIds(nodes), [nodes]);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
@@ -559,6 +567,7 @@ function StructureTree({
       parentId={null}
       depth={0}
       dragDisabled={grouped || undefined}
+      panelIds={panelIds}
       selectedId={selectedId}
       expanded={expanded}
       renamingId={renamingId}

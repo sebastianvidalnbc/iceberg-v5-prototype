@@ -1,4 +1,12 @@
-import { useId, useMemo, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  useContext,
+  useId,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Icon, type IconName } from "../ui-lib/Icon";
 import { MSym } from "@/v4-eos/ui/msym";
 import { Button } from "@/v4-eos/ui/button";
@@ -55,6 +63,7 @@ import {
 import { allowedChildType, maxChildrenFor } from "../elements";
 import { findNodeById } from "../structureOps";
 import { classifyWidget, WIDGET_FAMILY_HUE } from "../browse";
+import { hostsPanelLists, panelItemTitle, panelListsOf, panelOnlyIds } from "../structure-panel";
 
 // Widget-only wayfinding: the Offers / Segmentation collections list their
 // children by Offer Type, so each row gets the same family dot the Widgets list
@@ -62,7 +71,13 @@ import { classifyWidget, WIDGET_FAMILY_HUE } from "../browse";
 // into Page collections (Variants, feature bullets, …).
 const OFFER_TYPE_NOUN = "Offer Type";
 
+// Selects a structure node in the tree (the shell's selection). Collection rows
+// use it so clicking a row opens that item, as clicking it in the tree would.
+const SelectNodeContext = createContext<((nodeId: string) => void) | null>(null);
+
 interface PropertiesProps {
+  // Selects a structure node (see SelectNodeContext).
+  onSelectStructureNode?: (nodeId: string) => void;
   // The active authoring context; selects which Properties resolver is used.
   context: AuthoringContext;
   // The active experience: Variant (Page) or Widget config (Widget). Null when
@@ -704,22 +719,79 @@ function InlineFeatureItem({
   );
 }
 
-// All feature-bullet collections under the selected product, as inline editors.
-function InlineFeatureCollections({
-  variant,
+// One panel-only item that is not a feature bullet (a price cadence, a plan's
+// Product List entry, a footer link): its label as the heading, its own fields
+// as editable rows, and a Remove control.
+function InlineItemBlock({
+  title,
+  fields,
+  overrides,
+  onEdit,
+  onRemove,
+  removable,
+}: {
+  title: string;
+  fields: PropertyField[];
+  overrides: Record<string, string>;
+  onEdit: (label: string, value: string) => void;
+  onRemove: () => void;
+  removable: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 truncate text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-foreground">
+          {title}
+        </span>
+        <button
+          type="button"
+          disabled={!removable}
+          title={removable ? `Remove ${title}` : "At least one item required"}
+          aria-label={`Remove ${title}`}
+          onClick={onRemove}
+          className="grid size-8 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+        >
+          <MSym name="delete" size={16} />
+        </button>
+      </div>
+      {fields.length > 0 && (
+        <PropertyRows>
+          {fields.map((field) => (
+            <PropertyFieldRow
+              key={field.label}
+              field={field}
+              value={overrides[field.label] ?? field.value}
+              invalid={false}
+              onEdit={(v) => onEdit(field.label, v)}
+            />
+          ))}
+        </PropertyRows>
+      )}
+    </div>
+  );
+}
+
+// Panel-only lists under a node, as inline editors: feature bullets get the
+// icon + text row; every other list gets a labelled block per item.
+function InlinePanelLists({
+  lists,
   resolve,
   overridesFor,
-  productId,
   isOpen,
   onToggleList,
   onEditField,
   onAddChild,
   onRemoveChild,
+  panelIds,
+  renderTabbed,
 }: {
-  variant: VariantWorkspace;
+  lists: StructureNode[];
+  // Panel-only ids, and the renderer for a list whose items are tabs (the
+  // products under a category), so its items can hold their own lists.
+  panelIds: ReadonlySet<string>;
+  renderTabbed: (listId: string) => ReactNode;
   resolve: (id: string) => ObjectProperties | null;
   overridesFor: (id: string) => Record<string, string>;
-  productId: string;
   // Controlled collapse: state lives in the parent FieldsBody so these sections
   // join its Expand all / Collapse all.
   isOpen: (key: string) => boolean;
@@ -728,15 +800,16 @@ function InlineFeatureCollections({
   onAddChild: (parentId: string, childType: StructureObjectType) => void;
   onRemoveChild: (childId: string) => void;
 }) {
-  const product = findNodeById(variant.structure, productId);
-  const lists = (product?.children ?? []).filter(isFeatureListNode);
   if (!lists.length) return null;
 
   return (
     <>
       {lists.map((list) => {
+        if (hostsPanelLists(list, panelIds))
+          return <Fragment key={list.id}>{renderTabbed(list.id)}</Fragment>;
         const items = list.children ?? [];
-        const noun = list.itemNoun ?? "Feature";
+        const feature = isFeatureListNode(list);
+        const noun = list.itemNoun ?? (feature ? "Feature" : "Item");
         const childType = allowedChildType(list.objectType);
         const max = list.maxChildren ?? maxChildrenFor(list.objectType);
         const atMax = max != null && items.length >= max;
@@ -753,6 +826,13 @@ function InlineFeatureCollections({
             <div className="flex flex-col px-3 py-2">
               {items.map((item, i) => {
                 const resolved = resolve(item.id);
+                const fields = resolved ? flattenFields(resolved) : [];
+                const rowProps = {
+                  overrides: overridesFor(item.id),
+                  onEdit: (label: string, value: string) => onEditField(item.id, label, value),
+                  onRemove: () => onRemoveChild(item.id),
+                  removable: items.length > 1,
+                };
                 return (
                   <div
                     key={item.id}
@@ -761,13 +841,11 @@ function InlineFeatureCollections({
                         "mt-3 border-t border-[var(--color-border-subtle)] pt-3",
                     )}
                   >
-                    <InlineFeatureItem
-                      fields={resolved ? flattenFields(resolved) : []}
-                      overrides={overridesFor(item.id)}
-                      onEdit={(label, value) => onEditField(item.id, label, value)}
-                      onRemove={() => onRemoveChild(item.id)}
-                      removable={items.length > 1}
-                    />
+                    {feature ? (
+                      <InlineFeatureItem fields={fields} {...rowProps} />
+                    ) : (
+                      <InlineItemBlock title={item.label} fields={fields} {...rowProps} />
+                    )}
                   </div>
                 );
               })}
@@ -827,6 +905,7 @@ export function Properties({
   onAddChild,
   onRemoveChild,
   onReorderChild,
+  onSelectStructureNode,
 }: PropertiesProps) {
   const experienceNoun = context === "widget" ? "widget config" : "variant";
   return (
@@ -845,6 +924,7 @@ export function Properties({
           grows to fit the longest unbroken label (e.g. a long dropdown value) and
           pushes the panel past the window. Force it to a block so the body stays
           exactly the panel's width; long values truncate inside their controls. */}
+      <SelectNodeContext.Provider value={onSelectStructureNode ?? null}>
       <ScrollArea className="min-h-0 flex-1" viewportClassName="[&>div]:!block">
         <InspectorBody>
           {variant && selectedStructureNodeId ? (
@@ -872,6 +952,7 @@ export function Properties({
           )}
         </InspectorBody>
       </ScrollArea>
+      </SelectNodeContext.Provider>
     </aside>
   );
 }
@@ -909,41 +990,96 @@ function PropertiesBody({
     context === "widget"
       ? resolveWidgetPropertiesForVariant(variant, id)
       : resolvePropertiesForVariant(variant, id);
+  // Panel-only lists (structure-panel.ts) are edited here, not in the tree.
+  const panelIds = useMemo(() => panelOnlyIds(variant.structure), [variant.structure]);
+  const node = findNodeById(variant.structure, nodeId);
   const resolved = resolveNode(nodeId);
-  if (resolved.kind === "collection")
+  // A product's tab and header show its Product Title (see panelItemTitle).
+  const titled = <T extends { name?: string; items?: { id: string; label: string }[] }>(
+    data: T,
+  ): T => {
+    const items = data.items?.map((item) => {
+      const child = findNodeById(variant.structure, item.id);
+      return child ? { ...item, label: panelItemTitle(child) } : item;
+    });
+    return {
+      ...data,
+      name: node ? panelItemTitle(node) : data.name,
+      ...(items ? { items } : {}),
+    } as T;
+  };
+  if (resolved.kind === "collection") {
+    // Items that carry panel-only lists (the three products, each with its
+    // features) become one tab each, so the author never walks the tree.
+    // Panel-only lists (a category's products) are tabbed, one per item.
+    const tabbed = !!node && panelIds.has(node.id);
     return (
       <CollectionBody
-        data={resolved.data}
+        data={titled(resolved.data)}
         nodeId={nodeId}
         objectType={objectType}
         onAddChild={onAddChild}
         onRemoveChild={onRemoveChild}
         onReorderChild={onReorderChild}
+        tabbed={tabbed}
+        renderItem={(itemId) => {
+          const item = findNodeById(variant.structure, itemId);
+          return (
+            <PropertiesBody
+              context={context}
+              variant={variant}
+              nodeId={itemId}
+              objectType={item?.objectType ?? null}
+              overridesForNode={item?.content ?? {}}
+              invalidFields={invalidFields}
+              onEdit={(label, value) => onEditField(itemId, label, value)}
+              onEditField={onEditField}
+              onAddChild={onAddChild}
+              onRemoveChild={onRemoveChild}
+              onReorderChild={onReorderChild}
+            />
+          );
+        }}
       />
     );
+  }
   if (resolved.kind === "metadata") return <MetadataBody data={resolved.data} />;
   if (resolved.kind === "notice") return <NoticeBody data={resolved.data} />;
   // key={nodeId} remounts FieldsBody per selected object so its per-group
   // expand/collapse memory resets to the default (all open) on each new object.
-  // A product card also gets its feature bullets inline (the real `tabs` field
-  // renders inside the card's form), editable + add/remove.
-  const featureListKeys = (
-    findNodeById(variant.structure, nodeId)?.children ?? []
-  )
-    .filter(isFeatureListNode)
-    .map((l) => l.id);
+  // The node's panel-only lists (a product's features, cadences…) render inline
+  // under its fields, editable + add/remove.
+  const lists = node ? panelListsOf(node, panelIds) : [];
   return (
     <FieldsBody
       key={nodeId}
-      data={resolved.data}
+      data={titled(resolved.data)}
       overridesForNode={overridesForNode}
       invalidFields={invalidFields}
       onEdit={onEdit}
-      footerKeys={featureListKeys}
+      footerKeys={lists.map((l) => l.id)}
       footer={({ isOpen, toggle }) => (
-        <InlineFeatureCollections
-          variant={variant}
-          productId={nodeId}
+        <InlinePanelLists
+          lists={lists}
+          panelIds={panelIds}
+          renderTabbed={(listId) => {
+            const list = findNodeById(variant.structure, listId);
+            return (
+              <PropertiesBody
+                context={context}
+                variant={variant}
+                nodeId={listId}
+                objectType={list?.objectType ?? null}
+                overridesForNode={list?.content ?? {}}
+                invalidFields={invalidFields}
+                onEdit={(label, value) => onEditField(listId, label, value)}
+                onEditField={onEditField}
+                onAddChild={onAddChild}
+                onRemoveChild={onRemoveChild}
+                onReorderChild={onReorderChild}
+              />
+            );
+          }}
           resolve={(id) => {
             const r = resolveNode(id);
             return r.kind === "fields" ? r.data : null;
@@ -1086,6 +1222,8 @@ function CollectionBody({
   onAddChild,
   onRemoveChild,
   onReorderChild,
+  tabbed = false,
+  renderItem,
 }: {
   data: CollectionProperties;
   nodeId: string;
@@ -1093,9 +1231,16 @@ function CollectionBody({
   onAddChild: (parentId: string, childType: StructureObjectType) => void;
   onRemoveChild: (childId: string) => void;
   onReorderChild: (parentId: string, from: number, to: number) => void;
+  // Tabbed: one tab per item, the selected item's panel below (see PropertiesBody).
+  tabbed?: boolean;
+  renderItem?: (itemId: string) => ReactNode;
 }) {
   const { eyebrow, name, itemNoun, items } = data;
   const count = items.length;
+  const selectNode = useContext(SelectNodeContext);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const active = items.find((item) => item.id === activeId) ?? items[0];
+  const activeIndex = active ? items.findIndex((item) => item.id === active.id) : -1;
   const childType = allowedChildType(objectType ?? undefined);
   const max = data.max ?? maxChildrenFor(objectType ?? undefined);
   const atMax = max != null && count >= max;
@@ -1120,25 +1265,96 @@ function CollectionBody({
         }
       />
 
-      {count > 0 && (
-        <ul className="flex flex-col overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)]">
+      {tabbed && active && renderItem && (
+        <>
+          <div
+            role="tablist"
+            aria-label={`${itemNoun} tabs`}
+            className="flex items-center gap-1 overflow-x-auto border-b border-[var(--color-border-subtle)]"
+          >
+            {items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={item.id === active.id}
+                onClick={() => setActiveId(item.id)}
+                className={cn(
+                  "-mb-px shrink-0 border-b-2 px-3 py-2 text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                  item.id === active.id
+                    ? "border-[var(--color-action-primary)] font-medium text-foreground"
+                    : "border-transparent font-normal text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {renderItem(active.id)}
+          <div className="flex items-center gap-0.5 border-t border-[var(--color-border-subtle)] pt-3">
+            <span className={cn("mr-auto truncate", inspectorType.meta)}>{active.label}</span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={`Move ${nounLower} up`}
+              disabled={activeIndex <= 0}
+              onClick={() => onReorderChild(nodeId, activeIndex, activeIndex - 1)}
+            >
+              <MSym name="keyboard_arrow_up" size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={`Move ${nounLower} down`}
+              disabled={activeIndex >= count - 1}
+              onClick={() => onReorderChild(nodeId, activeIndex, activeIndex + 1)}
+            >
+              <MSym name="keyboard_arrow_down" size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={atMin ? `At least one ${nounLower} required` : `Remove ${nounLower}`}
+              disabled={atMin}
+              onClick={() => onRemoveChild(active.id)}
+              className="text-muted-foreground hover:text-[var(--color-status-danger)]"
+            >
+              <MSym name="delete" size={15} />
+            </Button>
+          </div>
+        </>
+      )}
+
+      {count > 0 && !tabbed && (
+        <ul className="flex flex-col gap-2">
           {items.map((item, i) => (
             <li
               key={item.id}
-              className="group/item flex min-h-11 items-center gap-3 rounded-sm px-3 transition-colors hover:bg-[var(--color-bg-hover)] focus-within:bg-[var(--color-bg-hover)]"
+              className="group/item flex min-h-11 items-stretch overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] transition-colors hover:border-[var(--color-action-primary)] focus-within:border-[var(--color-action-primary)]"
             >
-              {showFam && (
-                <span aria-hidden className="flex h-8 w-6 shrink-0 items-center justify-center">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
-                  />
+              <button
+                type="button"
+                onClick={() => selectNode?.(item.id)}
+                disabled={!selectNode}
+                title={`Open ${item.label}`}
+                className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50 disabled:cursor-default disabled:hover:bg-transparent"
+              >
+                {showFam && (
+                  <span aria-hidden className="flex h-6 w-3 shrink-0 items-center justify-center">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
+                    />
+                  </span>
+                )}
+                <span className={cn("min-w-0 flex-1 truncate", inspectorType.value)}>
+                  {item.label}
                 </span>
-              )}
-              <span className={cn("min-w-0 flex-1 truncate", inspectorType.value)}>
-                {item.label}
-              </span>
-              <div className="-mr-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
+                {selectNode && (
+                  <MSym name="chevron_right" size={18} className="shrink-0 text-muted-foreground" />
+                )}
+              </button>
+              <div className="flex items-center gap-0.5 border-l border-[var(--color-border-default)] px-1">
                 <Button
                   variant="ghost"
                   size="icon-xs"
