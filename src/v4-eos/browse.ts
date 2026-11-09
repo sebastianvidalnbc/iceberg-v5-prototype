@@ -315,14 +315,14 @@ export const WIDGET_FAMILY_HUE: Record<
   WidgetType,
   { fam: string; tint: string; ink: string }
 > = {
-  Retention: { fam: "#2563eb", tint: "#eff4ff", ink: "#1e40af" },
-  "Plan Picker": { fam: "#7c3aed", tint: "#f4effe", ink: "#5b21b6" },
-  Promotions: { fam: "#e11d64", tint: "#fdeff4", ink: "#9f1244" },
-  Banner: { fam: "#d97706", tint: "#fdf4e7", ink: "#92500e" },
-  Media: { fam: "#0d9488", tint: "#e7f6f4", ink: "#0f766e" },
-  SEO: { fam: "#0891b2", tint: "#e6f6fb", ink: "#155e75" },
-  Legal: { fam: "#475569", tint: "#eef1f5", ink: "#334155" },
-  Other: { fam: "#94a3b8", tint: "#f1f3f5", ink: "#52555c" },
+  Retention: { fam: "var(--color-family-retention)", tint: "var(--color-family-retention-tint)", ink: "var(--color-family-retention-ink)" },
+  "Plan Picker": { fam: "var(--color-family-plan-picker)", tint: "var(--color-family-plan-picker-tint)", ink: "var(--color-family-plan-picker-ink)" },
+  Promotions: { fam: "var(--color-family-promotions)", tint: "var(--color-family-promotions-tint)", ink: "var(--color-family-promotions-ink)" },
+  Banner: { fam: "var(--color-family-banner)", tint: "var(--color-family-banner-tint)", ink: "var(--color-family-banner-ink)" },
+  Media: { fam: "var(--color-family-media)", tint: "var(--color-family-media-tint)", ink: "var(--color-family-media-ink)" },
+  SEO: { fam: "var(--color-family-seo)", tint: "var(--color-family-seo-tint)", ink: "var(--color-family-seo-ink)" },
+  Legal: { fam: "var(--color-family-legal)", tint: "var(--color-family-legal-tint)", ink: "var(--color-family-legal-ink)" },
+  Other: { fam: "var(--color-family-other)", tint: "var(--color-family-other-tint)", ink: "var(--color-family-other-ink)" },
 };
 
 export type GroupSwatchId =

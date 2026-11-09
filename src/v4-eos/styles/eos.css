@@ -728,7 +728,7 @@
   height: 100%;
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: var(--color-preview-frame-bg);
   display: block;
 }
 .ui-preview__audience-overlay {

@@ -35,13 +35,10 @@ export function AppShell({ activeContext, onSelectContext, children }: AppShellP
       else navigate(next === "widget" ? routes.widgets() : routes.pages());
     });
 
-  // V4's visual system is Eos — a light, warm-neutral Material 3 scheme (see
-  // ui-lib/tokens.css, whose :root roles now carry the real Eos M3 values). The
-  // shell opts into the light theme here; the Live Preview keeps its own light
-  // island. (V2's shell used data-theme="dark"; V4 migrates the presentation
-  // layer to Eos, so the authoring chrome is light.)
+  // Theme comes from <html data-theme>: dark by default (V5-Dark). Every
+  // color is a token in ui-lib/tokens.css, so switching is one attribute.
   return (
-    <div className="ui-ws-app" data-theme="light">
+    <div className="ui-ws-app">
       <TopBar />
       <div className="ui-ws-shell">
         <AppNav context={activeContext} onSelectContext={handleSelectContext} />

@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { OpsHubEnvMark, OpsHubLogo } from "../ui-lib/OpsHubLogo";
 import { MSym } from "../ui/msym";
+import { readThemeMode, setThemeMode, type ThemeMode } from "../theme-mode";
 
 // Global platform top bar — Eos Library "Opshub bar" Overlay / INT-NFT /
 // Default (Figma 449:15626). Overlay is the in-app variant: lockup left,
 // utilities right, no Apps / Admin tools tabs (those belong to Dock, the
 // OpsHub app-chooser). Iceberg product nav stays on the rail below.
 export function TopBar() {
+  const [mode, setMode] = useState<ThemeMode>(readThemeMode);
+  const next: ThemeMode = mode === "dark" ? "light" : "dark";
+
   return (
     <header className="ui-topbar">
       <div className="ui-topbar__brand">
@@ -14,6 +19,19 @@ export function TopBar() {
       </div>
 
       <div className="ui-topbar__utils">
+        <button
+          type="button"
+          className="ui-topbar__icon-btn ui-topbar__theme"
+          aria-label={`Switch to ${next} theme`}
+          title={`Switch to ${next} theme`}
+          onClick={() => {
+            setThemeMode(next);
+            setMode(next);
+          }}
+        >
+          <MSym name={mode === "dark" ? "light_mode" : "dark_mode"} size={20} />
+        </button>
+
         <button
           type="button"
           className="ui-topbar__env"

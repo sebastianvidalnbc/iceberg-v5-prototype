@@ -14,6 +14,16 @@
   --layout-structure: #475569;
 }
 
+[data-theme="dark"] {
+  --layout-hero: #4ade80;
+  --layout-plan-picker: #f0b43c;
+  --layout-content: #2dd4bf;
+  --layout-media: #f472b6;
+  --layout-commerce: #fb923c;
+  --layout-footer: #c084fc;
+  --layout-structure: #94a3b8;
+}
+
 [data-layout-type="hero"] { --layout-accent: var(--layout-hero); }
 [data-layout-type="plan-picker"] { --layout-accent: var(--layout-plan-picker); }
 [data-layout-type="content"] { --layout-accent: var(--layout-content); }
@@ -101,7 +111,7 @@
 
 /* Picker row is selected (blue fill): keep the accent glyph legible on white. */
 .layout-chip--on {
-  background: #ffffff;
+  background: var(--color-bg-elevated);
 }
 
 /* Selected row inside a layout region: the row takes a stronger tint of the
