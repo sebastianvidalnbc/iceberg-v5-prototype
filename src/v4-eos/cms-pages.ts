@@ -7,7 +7,7 @@
 //   variants and editor links survive) and annotated with real list metadata.
 // - Hand-built routes that do not exist in production are left in place
 //   without metadata. They are demo fixtures, not production copies.
-import type { CmsPageMeta, TreeNode } from "./data";
+import type { CmsPageMeta, StructureNode, TreeNode, VariantWorkspace } from "./data";
 // The inventory lives in page-inventory/ (tracked, brand names replaced with dummy names). Without it the
 // glob is empty and the Pages tree stays hand-built, so CI builds still pass.
 const pagesRaw: string =
@@ -104,10 +104,14 @@ export function withCmsPages(tree: TreeNode[]): TreeNode[] {
     (a, b) => a.slug.split("/").length - b.slug.split("/").length,
   );
 
+  // Every inventory page, hand-built or not, ends up here.
+  const inventoryNodes: TreeNode[] = [];
+
   for (const row of rows) {
     const existing = byLabel.get(row.slug);
     if (existing) {
       existing.cms = metaFor(row);
+      inventoryNodes.push(existing);
       continue;
     }
     // Longest existing ancestor route, by path segment.
@@ -126,6 +130,60 @@ export function withCmsPages(tree: TreeNode[]): TreeNode[] {
     if (parent) parent.children = [...(parent.children ?? []), node];
     else roots.push(node);
     byLabel.set(row.slug, node);
+    inventoryNodes.push(node);
+  }
+
+  // The CMS capture has no page content, so each inventory page without a real
+  // variant gets one placeholder variant (see placeholderVariants).
+  for (const node of inventoryNodes) {
+    if (node.children?.some((c) => c.type === "variant")) continue;
+    node.children = [
+      ...(node.children ?? []),
+      { id: placeholderId(node.id), label: "Placeholder", type: "variant" },
+    ];
   }
   return roots;
+}
+
+const PLACEHOLDER_PREFIX = "ph-";
+
+export function placeholderId(routeId: string): string {
+  return PLACEHOLDER_PREFIX + routeId;
+}
+
+// A labelled Title + Footer skeleton. It says what it is, so authors never
+// mistake it for captured content.
+function placeholderWorkspace(id: string, pageLabel: string): VariantWorkspace {
+  const structure: StructureNode[] = [
+    { id: `${id}-title`, label: "Title", objectType: "page-section", role: "Page Title" },
+    { id: `${id}-footer`, label: "Footer", objectType: "page-section", role: "Footer" },
+  ];
+  return {
+    id,
+    name: "Placeholder",
+    structure,
+    previewData: {
+      title: pageLabel,
+      subtitle: "Placeholder · no captured content",
+      tone: "neutral",
+      body: "The CMS capture has no content for this page. Title and Footer are placeholders only.",
+    },
+    defaultSelectionId: structure[0].id,
+  };
+}
+
+// Workspaces for every placeholder variant under the tree. Registered into VARIANTS.
+export function placeholderVariants(
+  tree: TreeNode[],
+  out: Record<string, VariantWorkspace> = {},
+): Record<string, VariantWorkspace> {
+  for (const node of tree) {
+    for (const child of node.children ?? []) {
+      if (child.type === "variant" && child.id.startsWith(PLACEHOLDER_PREFIX)) {
+        out[child.id] = placeholderWorkspace(child.id, node.label);
+      }
+    }
+    if (node.children) placeholderVariants(node.children, out);
+  }
+  return out;
 }

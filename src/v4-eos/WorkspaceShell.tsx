@@ -283,6 +283,19 @@ export function WorkspaceShell({
   const handleSelectRoute = useCallback(
     (routeId: string) => {
       if (isPage) {
+        // A route with variants opens its first one, so the canvas shows
+        // something straight away (inventory pages open their Placeholder).
+        const firstVariant = findNode(PAGES_TREE, routeId)?.children?.find(
+          (c) => c.type === "variant",
+        );
+        if (firstVariant) {
+          setSelectedPageId(null);
+          setSelectedVariantId(firstVariant.id);
+          setPageMemory((prev) =>
+            prev[firstVariant.id] ? prev : { ...prev, [firstVariant.id]: seedMemory(firstVariant.id) },
+          );
+          return;
+        }
         setSelectedPageId(routeId);
         setSelectedVariantId(null);
       } else if (WIDGET_CONFIGS[routeId]) {

@@ -7,7 +7,7 @@
 // (see WorkspaceShell). Structure/Preview/Properties always belong to the
 // active Variant.
 import { VARIANT_STRUCTURES } from "./variants";
-import { withCmsPages } from "./cms-pages";
+import { placeholderVariants, withCmsPages } from "./cms-pages";
 import {
   VARIANT_PREVIEWS,
   VARIANT_DEFAULT_SELECTION,
@@ -1355,6 +1355,9 @@ export const VARIANTS: Record<string, VariantWorkspace> = Object.fromEntries(
     } satisfies VariantWorkspace,
   ])
 );
+
+// Placeholder variants for inventory pages with no captured content.
+Object.assign(VARIANTS, placeholderVariants(PAGES_TREE));
 
 export function getVariant(id: string | null): VariantWorkspace | null {
   return id ? VARIANTS[id] ?? null : null;
