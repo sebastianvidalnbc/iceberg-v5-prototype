@@ -26,8 +26,10 @@ export interface StructureTreeRowProps {
   boxed?: boolean;
   noTrailingFade?: boolean;
   famType?: WidgetType;
-  /** Layout region header: colour the icon with the layout type's accent. */
-  layoutAccent?: boolean;
+  /** Secondary label colour (alternatives beside an anchor row). */
+  muted?: boolean;
+  /** No icon column: the label sits right after the disclosure chevron. */
+  noIconSlot?: boolean;
   /** Content Pages outline: reads as a fill-out section that opens Properties. */
   sectionEntry?: boolean;
   onSelect: () => void;
@@ -52,7 +54,8 @@ export function StructureTreeRow({
   boxed,
   noTrailingFade,
   famType,
-  layoutAccent,
+  muted,
+  noIconSlot,
   sectionEntry,
   onSelect,
   onToggle,
@@ -149,16 +152,11 @@ export function StructureTreeRow({
       ) : icon ? (
         <span
           aria-hidden
-          className={cn(
-            "flex size-5 shrink-0 items-center justify-center",
-            layoutAccent
-              ? "text-[var(--layout-accent)]"
-              : "text-[var(--color-text-secondary)]",
-          )}
+          className="flex size-5 shrink-0 items-center justify-center text-[var(--color-text-muted)]"
         >
           <MSym name={icon} size={16} />
         </span>
-      ) : sectionEntry ? null : (
+      ) : sectionEntry || noIconSlot ? null : (
         <span aria-hidden className="size-5 shrink-0" />
       )}
       <span
@@ -166,9 +164,11 @@ export function StructureTreeRow({
           sectionEntry
             ? "min-w-0 flex-1 whitespace-normal py-2"
             : "min-w-0 flex-1 truncate",
-          labelWeight === "medium"
-            ? "font-medium text-foreground"
-            : "font-normal text-foreground/90",
+          muted
+            ? "font-normal text-[var(--color-text-secondary)]"
+            : labelWeight === "medium"
+              ? "font-medium text-foreground"
+              : "font-normal text-foreground/90",
           disabled && "line-through",
         )}
       >

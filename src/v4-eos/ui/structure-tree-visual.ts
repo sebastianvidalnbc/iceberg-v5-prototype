@@ -5,10 +5,10 @@ export type StructureLabelWeight = "regular" | "medium";
 
 export interface StructureNodeVisual {
   labelWeight: StructureLabelWeight;
-  /** Material Symbol name; omitted when the label alone is enough. */
-  icon?: string;
   /** Extra space above top-level page sections (major group break). */
   sectionBreak?: boolean;
+  /** Secondary label colour: alternatives to the anchor row. */
+  muted?: boolean;
 }
 
 const COLLECTION_TYPES = new Set([
@@ -38,36 +38,41 @@ export function getStructureNodeVisual(
   if (t === "page-section") {
     return {
       labelWeight: "medium",
-      icon: "view_agenda",
       sectionBreak: ctx.parentId === null && ctx.index > 0,
     };
   }
   if (t === "variation") {
-    return { labelWeight: "medium", icon: "call_split" };
+    // A/B alternatives sit beside the Control. Control is the anchor (medium);
+    // the other variations are muted. Matched by label, the same convention as
+    // data.ts control schemas.
+    if (node.label.trim().toLowerCase() === "control") {
+      return { labelWeight: "medium" };
+    }
+    return { labelWeight: "regular", muted: true };
   }
   if (t === "section-options") {
-    return { labelWeight: "regular", icon: "tune" };
+    return { labelWeight: "regular" };
   }
   if (t === "behaviours") {
-    return { labelWeight: "regular", icon: "rule" };
+    return { labelWeight: "regular" };
   }
   if (t === "content-block") {
-    return { labelWeight: "regular", icon: "text_fields" };
+    return { labelWeight: "regular" };
   }
   if (t === "widget-config" || t === "journey-flows") {
-    return { labelWeight: "medium", icon: "settings" };
+    return { labelWeight: "medium" };
   }
   if (t === "offer-group" || t === "segmentation-group") {
     return { labelWeight: "medium" };
   }
   if (t === "segmentation-category") {
-    return { labelWeight: "medium", icon: "folder" };
+    return { labelWeight: "medium" };
   }
   if (COLLECTION_TYPES.has(t ?? "")) {
-    return { labelWeight: "medium", icon: "folder" };
+    return { labelWeight: "medium" };
   }
   if (t === "product" || t === "plan") {
-    return { labelWeight: "regular", icon: "crop_square" };
+    return { labelWeight: "regular" };
   }
   if (t === "feature" || t === "cadence" || t === "pricing-option" || t === "offer") {
     return { labelWeight: "regular" };

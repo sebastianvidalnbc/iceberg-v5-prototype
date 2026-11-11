@@ -345,8 +345,8 @@ function StructureLevel({
                 isOpen={isOpen}
                 selected={node.id === selectedId}
                 disabled={node.disabled}
-                icon={layoutDef ? layoutDef.icon : visual.icon}
-                layoutAccent={!!layoutDef}
+                muted={visual.muted}
+                noIconSlot
                 labelWeight={visual.labelWeight}
                 grip={grip}
                 dropHandlers={dragDisabled ? undefined : drag.dropProps(index)}
@@ -745,7 +745,7 @@ export function Explorer({
 
   // Pages / Structure split (percentage of the Explorer height for the Pages
   // pane). Default is intentionally compact so Structure gets more room.
-  const PAGES_DEFAULT_PCT = 30;
+  const PAGES_DEFAULT_PCT = 20;
   const [pagesPct, setPagesPct] = useState(PAGES_DEFAULT_PCT);
   const beginPagesResize = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -758,7 +758,7 @@ export function Explorer({
     el.setPointerCapture(e.pointerId);
     const onMove = (ev: PointerEvent) => {
       const pct = ((ev.clientY - rect.top) / rect.height) * 100;
-      setPagesPct(Math.min(80, Math.max(15, pct)));
+      setPagesPct(Math.min(80, Math.max(10, pct)));
     };
     const onUp = () => {
       el.releasePointerCapture?.(e.pointerId);

@@ -185,12 +185,14 @@ export function WorkspaceShell({
   // the preview, so the Widget context opens the column wider than Pages.
   const EXPLORER_MIN = 240;
   const EXPLORER_MAX = 560;
-  const EXPLORER_DEFAULTS: Record<AuthoringContext, number> = {
-    page: 280,
-    widget: 420,
-  };
-  const [explorerWidths, setExplorerWidths] =
-    useState<Record<AuthoringContext, number>>(EXPLORER_DEFAULTS);
+  // Default matches the Properties panel width (eos.css --ws-properties-w:
+  // clamp(380px, 24vw, 460px)), so the two side columns start equal.
+  const propertiesDefaultWidth = () =>
+    Math.round(Math.min(460, Math.max(380, window.innerWidth * 0.24)));
+  const [explorerWidths, setExplorerWidths] = useState<Record<AuthoringContext, number>>(() => ({
+    page: propertiesDefaultWidth(),
+    widget: propertiesDefaultWidth(),
+  }));
   const explorerWidth = explorerWidths[context];
   const beginExplorerResize = useCallback(
     (e: ReactPointerEvent) => {
@@ -946,7 +948,7 @@ export function WorkspaceShell({
             onDoubleClick={() =>
               setExplorerWidths((prev) => ({
                 ...prev,
-                [context]: EXPLORER_DEFAULTS[context],
+                [context]: propertiesDefaultWidth(),
               }))
             }
             className="group relative z-10 -mx-1 w-2 shrink-0 cursor-col-resize touch-none select-none"
