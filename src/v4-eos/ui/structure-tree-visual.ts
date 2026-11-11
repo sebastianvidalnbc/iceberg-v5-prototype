@@ -45,7 +45,7 @@ export function getStructureNodeVisual(
     // A/B alternatives sit beside the Control. Control is the anchor (medium);
     // the other variations are muted. Matched by label, the same convention as
     // data.ts control schemas.
-    if (node.label.trim().toLowerCase() === "control") {
+    if (["control", "default/control"].includes(node.label.trim().toLowerCase())) {
       return { labelWeight: "medium" };
     }
     return { labelWeight: "regular", muted: true };

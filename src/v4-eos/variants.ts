@@ -76,7 +76,7 @@ const disclaimerStructure: StructureNode[] = [
   section(n("td-title", "Title"), "Page Title"),
   section(n("td-card", "Premium card first test", [
     n("td-section-content", "Section Content", [
-      n("td-control", "Control", [
+      n("td-control", "Default/control", [
         n("td-variant-categories", "Variant Categories", [
           n("td-plans", "Plans", [
             nt("td-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
@@ -101,7 +101,7 @@ const annualStructure: StructureNode[] = [
   section(n("as-title", "Title"), "Page Title"),
   section(n("as-plan-picker", "Plan Picker", [
     n("as-section-content", "Section Content", [
-      n("as-control", "Control", [
+      n("as-control", "Default/control", [
         n("as-variant-categories", "Variant Categories", [
           n("as-plans", "Plans", [
             nt("as-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
@@ -153,7 +153,7 @@ const premiumCardStructure: StructureNode[] = [
       nt("pc-section-content", "Section Content", "section-content", {
         children: [
           nt("pc-predecision", "Predecision", "variation"),
-          nt("pc-control", "Control", "variation", {
+          nt("pc-control", "Default/control", "variation", {
             children: [
               nt("pc-categories", "Categories", "categories", {
                 children: [
@@ -227,7 +227,7 @@ const premiumTest2Structure: StructureNode[] = [
   section(n("pt-title", "Title"), "Page Title"),
   section(n("pt-plan-picker", "Premium Plan Picker", [
     n("pt-section-content", "Section Content", [
-      n("pt-control", "Control", [
+      n("pt-control", "Default/control", [
         n("pt-variant-categories", "Variant Categories", [
           n("pt-plans", "Plans", [
             nt("pt-plan-picker-data", "Plan Picker Data", "plan-picker-data", {

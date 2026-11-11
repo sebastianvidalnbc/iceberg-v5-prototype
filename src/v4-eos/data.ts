@@ -1491,7 +1491,7 @@ export function classifyNode(
   if (label === "section options") {
     return { kind: "fields", data: sectionOptionsSchema(parent?.design) };
   }
-  if (label === "control" || label === "predecision" || label === "default") {
+  if (label === "control" || label === "default/control" || label === "predecision" || label === "default") {
     return { kind: "fields", data: controlSchema(node.label) };
   }
   if (label === "plans" || label === "bundles") {
